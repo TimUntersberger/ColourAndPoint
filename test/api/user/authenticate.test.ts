@@ -1,26 +1,28 @@
 import _ from "lodash";
 import Http from "http-status-codes";
 import Sinon from "sinon";
+import btoa from "btoa";
 import { expect } from "chai";
-import * as Errors from "api/errors";
-import Authenticate from "api/use_case/authenticate";
+import Errors from "api/errors";
+import Authenticate from "api/use_case/user/authenticate";
 import { Users } from "api/repository";
 
 function omitPassword(json){
   return _.omit(json, ["password"]);
 }
 
-describe("Authenticate", function(){
+describe("User.Authenticate", function(){
   describe("#call", function(){
-    let fakeUser = { username: "name", password: "pw" };
+    let fakeUser = { username: "name", password: "pw"}
+    let fakeToken = btoa(`${fakeUser.username}:${fakeUser.password}`);
     let usersFindStub: Sinon.SinonStub;
 
     let subject = () => {
-      return Authenticate.call(fakeUser);
+      return Authenticate.call(fakeToken);
     };
 
     it("searches for a user with the correct arguments", function(){
-      usersFindStub = Sinon.stub(Users, "find").returns(fakeUser);
+      usersFindStub = Sinon.stub(Users, "find").returns(fakeToken);
       subject();
       const result = usersFindStub.calledWithExactly(omitPassword(fakeUser));
       expect(result).to.eql(true);
@@ -30,12 +32,11 @@ describe("Authenticate", function(){
     context("when user exists", function(){
       context("when the password is correct", function(){
         before(function(){
-          usersFindStub = Sinon.stub(Users, "find").returns(fakeUser);
+          usersFindStub = Sinon.stub(Users, "find").returns({ resource: fakeUser });
         })
 
         it("returns the correct dto", function(){
           expect(subject()).to.eql({
-            resource: Authenticate.build_authentication_token(fakeUser.username, fakeUser.password),
             status: Http.OK
           })
         })
@@ -44,10 +45,10 @@ describe("Authenticate", function(){
           usersFindStub.restore();
         })
       })
-      
+
       context("when the password is not correct", function(){
         before(function(){
-          usersFindStub = Sinon.stub(Users, "find").returns(omitPassword(fakeUser));
+          usersFindStub = Sinon.stub(Users, "find").returns({ resource: omitPassword(fakeToken) });
         })
 
         it("returns the correct dto", function(){
