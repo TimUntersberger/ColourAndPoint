@@ -6,6 +6,10 @@ import * as Errors from "api/errors";
 import Authenticate from "api/use_case/authenticate";
 import { Users } from "api/repository";
 
+function omitPassword(json){
+  return _.omit(json, ["password"]);
+}
+
 describe("Authenticate", function(){
   describe("#call", function(){
     let fakeUser = { username: "name", password: "pw" };
@@ -18,35 +22,44 @@ describe("Authenticate", function(){
     it("searches for a user with the correct arguments", function(){
       usersFindStub = Sinon.stub(Users, "find").returns(fakeUser);
       subject();
-      const result = usersFindStub.calledWithExactly(_.omit(fakeUser, ["password"]));
+      const result = usersFindStub.calledWithExactly(omitPassword(fakeUser));
       expect(result).to.eql(true);
       usersFindStub.restore();
     })
 
     context("when user exists", function(){
-      before(function(){
-        usersFindStub = Sinon.stub(Users, "find").returns(fakeUser);
-      })
-
       context("when the password is correct", function(){
+        before(function(){
+          usersFindStub = Sinon.stub(Users, "find").returns(fakeUser);
+        })
+
         it("returns the correct dto", function(){
           expect(subject()).to.eql({
             resource: Authenticate.build_authentication_token(fakeUser.username, fakeUser.password),
             status: Http.OK
           })
         })
+
+        after(function() {
+          usersFindStub.restore();
+        })
       })
+      
       context("when the password is not correct", function(){
-        it.only("returns the correct dto", function(){
+        before(function(){
+          usersFindStub = Sinon.stub(Users, "find").returns(omitPassword(fakeUser));
+        })
+
+        it("returns the correct dto", function(){
           expect(subject()).to.eql({
             errors: [Errors.InvalidPassword],
             status: Http.FORBIDDEN
           })
         })
-      })
 
-      after(function() {
-        usersFindStub.restore();
+        after(function() {
+          usersFindStub.restore();
+        })
       })
     })
 
