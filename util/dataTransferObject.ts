@@ -4,15 +4,16 @@ export default class DataTransferObject{
   collection: Array<any>;
   errors: Array<any>;
 
-  constructor(
-    status: number,
-    resource?: any,
-    collection?: Array<any>,
-    errors?: Array<any>
+  constructor(args: {
+      status: number,
+      resource?: any,
+      collection?: Array<any>,
+      errors?: Array<any>
+    }
   ){
-    this.status = status;
-    this.resource = resource;
-    this.collection = collection;
-    this.errors = errors;
+    this.status = args.status;
+    this.resource = args.resource;
+    this.collection = args.collection;
+    this.errors = args.errors;
   }
 }

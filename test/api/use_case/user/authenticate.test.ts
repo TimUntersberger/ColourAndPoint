@@ -6,6 +6,7 @@ import { expect } from "chai";
 import Errors from "api/errors";
 import Authenticate from "api/use_case/user/authenticate";
 import { Users } from "api/repository";
+import DataTransferObject from "util/dataTransferObject";
 
 function omitPassword(json){
   return _.omit(json, ["password"]);
@@ -13,73 +14,56 @@ function omitPassword(json){
 
 describe("User.Authenticate", function(){
   describe("#call", function(){
-    let fakeUser = { username: "name", password: "pw"}
-    let fakeToken = btoa(`${fakeUser.username}:${fakeUser.password}`);
-    let usersFindStub: Sinon.SinonStub;
+    const fakeUser = { username: "name", password: "pw"}
+    const fakeToken = btoa(`${fakeUser.username}:${fakeUser.password}`);
+    const usersFindStub = Sinon.stub(Users, "find");
 
     let subject = () => {
       return Authenticate.call(fakeToken);
     };
 
     it("searches for a user with the correct arguments", function(){
-      usersFindStub = Sinon.stub(Users, "find").returns(fakeToken);
+      usersFindStub.returns(fakeToken);
       subject();
       const result = usersFindStub.calledWithExactly(omitPassword(fakeUser));
       expect(result).to.eql(true);
-      usersFindStub.restore();
     })
 
     context("when user exists", function(){
       context("when the password is correct", function(){
         before(function(){
-          usersFindStub = Sinon.stub(Users, "find").returns({ resource: fakeUser });
+          usersFindStub.returns(new DataTransferObject({ status: Http.OK, resource: fakeUser }));
         })
 
         it("returns the correct dto", function(){
-          expect(subject()).to.eql({
+          expect(subject()).to.eql(new DataTransferObject({
             status: Http.OK
-          })
-        })
-
-        after(function() {
-          usersFindStub.restore();
+          }));
         })
       })
 
       context("when the password is not correct", function(){
         before(function(){
-          usersFindStub = Sinon.stub(Users, "find").returns({ resource: omitPassword(fakeToken) });
+          usersFindStub.returns(new DataTransferObject({ status: Http.OK, resource: omitPassword(fakeToken) }));
         })
 
         it("returns the correct dto", function(){
-          expect(subject()).to.eql({
+          expect(subject()).to.eql(new DataTransferObject({
             errors: [Errors.InvalidPassword],
             status: Http.FORBIDDEN
-          })
-        })
-
-        after(function() {
-          usersFindStub.restore();
+          }))
         })
       })
     })
 
     context("when user doesn't exist", function(){
-      before(function(){
-        usersFindStub = Sinon.stub(Users, "find").returns(null);
-      })
-
       it("returns the correct dto", function(){
-        usersFindStub.returns(null);
+        usersFindStub.returns(new DataTransferObject({ status: Http.NOT_FOUND }));
 
-        expect(subject()).to.eql({
+        expect(subject()).to.eql(new DataTransferObject({
           errors: [Errors.InvalidUsername],
           status: Http.NOT_FOUND
-        })
-      })
-
-      after(function() {
-        usersFindStub.restore();
+        }));
       })
     })
   })

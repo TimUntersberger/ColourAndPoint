@@ -1,7 +1,8 @@
 import Http from "http-status-codes";
+import DataTransferObject from "util/dataTransferObject"
 
 export default class Controller{
   static call(): Object{
-    return { status: Http.OK };
+    return new DataTransferObject({ status: Http.OK });
   }
 }
