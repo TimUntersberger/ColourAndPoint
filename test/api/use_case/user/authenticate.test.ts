@@ -12,15 +12,22 @@ function omitPassword(json){
   return _.omit(json, ["password"]);
 }
 
-describe("User.Authenticate", function(){
+describe("Api.UseCase.User.Authenticate", function(){
   describe("#call", function(){
     const fakeUser = { username: "name", password: "pw"}
     const fakeToken = btoa(`${fakeUser.username}:${fakeUser.password}`);
-    const usersFindStub = Sinon.stub(Users, "find");
-
     let subject = () => {
       return Authenticate.call(fakeToken);
     };
+    let usersFindStub: Sinon.SinonStub;
+
+    before(function(){
+      usersFindStub = Sinon.stub(Users, "find");
+    })
+
+    after(function(){
+      usersFindStub.restore();
+    })
 
     it("searches for a user with the correct arguments", function(){
       usersFindStub.returns(fakeToken);

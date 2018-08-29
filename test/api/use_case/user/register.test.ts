@@ -6,14 +6,22 @@ import Sinon from "sinon";
 import { expect } from "chai";
 import DataTransferObject from "util/dataTransferObject";
 
-describe("User.Register", function(){
+describe("Api.UseCase.User.Register", function(){
   describe("#call", function(){
     const subject = () => {
       return Register.call(fakeUser.username, fakeUser.password);
     };
 
     let fakeUser = { username: "name", password: "pw" };
-    let usersCreateStub = Sinon.stub(Users, "create");
+    let usersCreateStub: Sinon.SinonStub;
+
+    before(function(){
+      usersCreateStub = Sinon.stub(Users, "create");
+    })
+
+    after(function(){
+      usersCreateStub.restore();
+    })
 
     it("tries to create a new user with the correct arguments", function(){
       usersCreateStub.returns(new DataTransferObject({

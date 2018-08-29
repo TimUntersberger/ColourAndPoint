@@ -1,7 +1,7 @@
 import DataTransferObject from "util/dataTransferObject";
 import Http from "http-status-codes";
 import Errors from "api/errors";
-import { User } from "api/entites";
+import { User } from "api/entites"
 import { Users } from "api/repository";
 
 export default class Register{

@@ -3,7 +3,7 @@ import Errors from "api/errors";
 import atob from "atob";
 import { User } from "api/entites";
 import _ from "lodash";
-import { Users } from "../../repository";
+import { Users } from "api/repository";
 import DataTransferObject from "util/dataTransferObject";
 
 export default class Authenticate {
